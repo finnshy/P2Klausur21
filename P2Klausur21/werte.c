@@ -8,7 +8,6 @@
 int readWerte(tEnergiewert* data, unsigned amount) {
 	FILE* inp = NULL;
 	char* puffer = (char*)calloc(80, sizeof(char));
-	int check = 0;
 	if (puffer) {
 		inp = fopen("Energiewerte.txt", "rt");
 		if (inp) {
@@ -16,9 +15,17 @@ int readWerte(tEnergiewert* data, unsigned amount) {
 			for (unsigned i = 0; i < amount; i++)
 			{
 				puffer = fgets(puffer, 80, inp);
-				check = sscanf(puffer, "%u.%u.%u %u:%u;%lf;%lf;%lf", &data[i].datum.tag, &data[i].datum.monat, &data[i].datum.jahr, &data[i].datum.stunden, &data[i].datum.minuten, &data[i].last, &data[i].erzeugung, &data[i].importe);
-				if (check != 8) {
-					printf("Fehler beim Einlesen der Zeile %d", i);
+				if (!puffer) {
+					free(puffer);
+					fclose(inp);
+					printf("Es stehen weniger als %u Datensätze in der Datei (nur %i). Lesen nicht erfolgreich.\n", amount, i);
+					return -1;
+				}
+				if (sscanf(puffer, "%u.%u.%u %u:%u;%lf;%lf;%lf", &data[i].datum.tag, &data[i].datum.monat, &data[i].datum.jahr, &data[i].datum.stunden, &data[i].datum.minuten, &data[i].last, &data[i].erzeugung, &data[i].importe) != 8) {
+					printf("WARNUNG: Fehler beim Einlesen der Zeile %d\n\n", i);
+					free(puffer);
+					fclose(inp);
+					return -1;
 				}
 			}
 		}
@@ -27,20 +34,17 @@ int readWerte(tEnergiewert* data, unsigned amount) {
 			if (puffer) {
 				free(puffer);
 			}
-
 			if (inp) {
 				fclose(inp);
 			}
 			return -1;
 		}
 	}
-
-	if (puffer) {
-		free(puffer);
+	else {
+		printf("Fehler beim Erstellen des Puffers.\n\n");
+		return -1;
 	}
-	if (inp) {
-		flcose(inp);
-	}
+	printf("%u Werte eingelesen.\n\n", amount);
 	return 0;
 }
 
